@@ -1,11 +1,9 @@
-from src.Sarsa import Sarsa
 from src.Train import Train
-import gym
 from matplotlib import pyplot as plt
 
-trainer = Train("Sarsa", "MountainCar-v0", rbf_order=10)
+trainer = Train("Sarsa", "MountainCar-v0", rbf_order=6)
 
-reward_per_episode, steps_per_episode = trainer.train(episodes=1000, alpha=0.025, gamma=0.995, epsilon=0.1, max_steps=None, render=False)
+reward_per_episode, steps_per_episode = trainer.train(episodes=1000, alpha=25e-3, gamma=1, epsilon=0.1, max_steps=350, render=True)
 
 
 plt.figure(figsize=(24, 8), dpi=160)

@@ -13,18 +13,7 @@ class Sarsa:
 
 
     def update(self, state, action, reward, next_state=None, next_action=None, alpha=0.5, gamma=0.5, terminate=False):
-        """
 
-        :param state:
-        :param action:
-        :param reward:
-        :param next_state:
-        :param next_action:
-        :param alpha:
-        :param gamma:
-        :param terminal:
-        :return:
-        """
 
         q_approx_grad = self.transform(state) # wrote it like this so that its more understandable
 
@@ -33,7 +22,7 @@ class Sarsa:
         else:
             update_target = reward + gamma * self.q_approx(next_state, next_action) - self.q_approx(state, action)
 
-        self.W[:, action] = self.W[:, action] + alpha * update_target * q_approx_grad
+        self.W[:, action] += alpha * update_target * q_approx_grad
 
 
 
@@ -46,12 +35,12 @@ class Sarsa:
         '''
 
         state = self.transform(state)
-        # print(state)
+
+        # print(self.W)
         if action is None:
             return self.W.T @ state
         else:
             return self.W[:, action].T @ state
-
 
 
 

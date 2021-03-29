@@ -1,7 +1,7 @@
 import gym
 import numpy as np
-from src.Sarsa import Sarsa
-from src.RadialBasis import RBF
+from src.Agents.Sarsa import Sarsa
+from src.FeatureConstructors.RadialBasis import RBF
 
 
 
@@ -59,7 +59,7 @@ class Train:
                 rewards_sum += reward
 
                 if terminate is True or (max_steps is not None and i > max_steps):  # in termination, update using only current state-action, and break out of this episode
-                    self.model.update(state, action, reward, alpha=alpha, gamma=gamma, terminate=terminate)
+                    self.model.update(state, action, reward, alpha=alpha, gamma=gamma, terminate=True)
                     break
 
                 # else get next action using the next state, update following the SARSA rule

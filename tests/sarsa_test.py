@@ -1,7 +1,5 @@
-import numpy as np
 import gym
-import matplotlib.pyplot as plt
-from src.RadialBasis import RBF
+from src.FeatureConstructors.RadialBasis import RBF
 
 A = RBF(3, 2, [-1.2, -0.7], [0.6, 0.7])
 feat = A.transform([-0.8, 0.5])
