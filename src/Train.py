@@ -23,14 +23,12 @@ class Train:
 
         # todo: do some box/discreet checking here later
 
-
-
         self.model = models[model_name](**model_config)
 
 
 
 
-    def train(self, episodes, learning_rate, discount, epsilon, max_steps=None, render=False):
+    def train(self, episodes, learning_rate, discount, epsilon, max_steps=None, decay=False, render=False):
 
         reward_per_episode = []
         steps_per_episode = []
@@ -43,6 +41,12 @@ class Train:
 
             i = 1
             rewards_sum = 0
+
+            if decay is True and ep % 100 == 0:
+                print(ep)
+                learning_rate /= 1.2
+                epsilon /= 1.2
+
 
             while True:  # loop controlled with termination of state, run until done
 
@@ -59,8 +63,9 @@ class Train:
                     self.model.update(state, action, reward, learning_rate=learning_rate, discount=discount, terminate=True)
                     break
 
-                # else get next action using the next state, update following the SARSA rule
-                next_action = self.greedy_policy(next_state, epsilon)
+                if self.model_type is "SARSA":
+                    # else get next action using the next state, update following the SARSA rule
+                    next_action = self.greedy_policy(next_state, epsilon)
                 self.model.update(state, action, reward, next_state=next_state, next_action=next_action,
                                   learning_rate=learning_rate, discount=discount)
 
