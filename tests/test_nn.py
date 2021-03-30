@@ -31,7 +31,7 @@ print(X.shape, Y.min(), Y.max())
 layers = [FullyConnected(20, "tanh"), FullyConnected(5, "tanh"), FullyConnected(1, "tanh")]
 
 net = Network(layers, X.shape[1], "MSE")
-pred, loss = net.fit(X, Y, epoch=300, learning_rate=.3, momentum_rate=.1, batch_size=50)
+pred, loss = net.fit(X, Y, epoch=300, learning_rate=.3, momentum_rate=.9, batch_size=50)
 # acc = (np.sign(pred) == Y).mean() * 100
 
 # print(acc)

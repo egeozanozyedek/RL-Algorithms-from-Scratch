@@ -10,9 +10,11 @@ class Sarsa:
         self.basis_function = basis_function
         self.W = np.zeros((self.basis_function.order ** state_dim, action_dim))  # weight vector, see Ch.10 or 9,
 
+        self.deep = True
 
 
-    def update(self, state, action, reward, next_state=None, next_action=None, alpha=0.5, gamma=0.5, terminate=False):
+
+    def update(self, state, action, reward, next_state=None, next_action=None, learning_rate=0.5, discount=0.5, terminate=False):
 
 
         q_approx_grad = self.transform(state) # wrote it like this so that its more understandable
@@ -20,9 +22,9 @@ class Sarsa:
         if terminate:
             update_target = reward - self.q_approx(state, action)
         else:
-            update_target = reward + gamma * self.q_approx(next_state, next_action) - self.q_approx(state, action)
+            update_target = reward + discount * self.q_approx(next_state, next_action) - self.q_approx(state, action)
 
-        self.W[:, action] += alpha * update_target * q_approx_grad
+        self.W[:, action] += learning_rate * update_target * q_approx_grad
 
 
 

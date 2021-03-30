@@ -1,39 +1,36 @@
-import gym
+
 import numpy as np
 from src.Agents.Sarsa import Sarsa
-from src.FeatureConstructors.RadialBasis import RBF
-
-
+from src.Agents.DeepSARSA import DeepSARSA
 
 
 
 class Train:
 
-    def __init__(self, model_name, env_name, rbf_order):
+    def __init__(self, env, model_name, model_config):
 
-        models = {"Sarsa": Sarsa}
+        models = {"Sarsa": Sarsa, "DeepSARSA": DeepSARSA}
 
-        self.env = gym.make(env_name).env
+        self.env = env
+
+        if model_name is "Sarsa"or "DeepSARSA":
+            self.model_type = "SARSA"
+        elif model_name is "DQN":
+            self.model_type = "QLearning"
 
         print(f"State Space: {self.env.observation_space} \nAction Space: {self.env.action_space}")
 
 
         # todo: do some box/discreet checking here later
 
-        state_dim = self.env.observation_space.shape[0]
-        action_dim = self.env.action_space.n
-
-        state_low = self.env.observation_space.low
-        state_high= self.env.observation_space.high
-
-        basis_function = RBF(rbf_order, state_dim, state_low, state_high)
 
 
-        self.model = models[model_name](state_dim, action_dim, basis_function)
+        self.model = models[model_name](**model_config)
 
 
 
-    def train(self, episodes, alpha, gamma, epsilon, max_steps=None, render=False):
+
+    def train(self, episodes, learning_rate, discount, epsilon, max_steps=None, render=False):
 
         reward_per_episode = []
         steps_per_episode = []
@@ -59,12 +56,13 @@ class Train:
                 rewards_sum += reward
 
                 if terminate is True or (max_steps is not None and i > max_steps):  # in termination, update using only current state-action, and break out of this episode
-                    self.model.update(state, action, reward, alpha=alpha, gamma=gamma, terminate=True)
+                    self.model.update(state, action, reward, learning_rate=learning_rate, discount=discount, terminate=True)
                     break
 
                 # else get next action using the next state, update following the SARSA rule
                 next_action = self.greedy_policy(next_state, epsilon)
-                self.model.update(state, action, reward, next_state=next_state, next_action=next_action, alpha=alpha, gamma=gamma)
+                self.model.update(state, action, reward, next_state=next_state, next_action=next_action,
+                                  learning_rate=learning_rate, discount=discount)
 
                 # update current state-action
 
@@ -87,6 +85,14 @@ class Train:
         else:
             return self.env.action_space.sample()
 
+
+    def max_action(self, state):
+        return np.argmax(self.model.q_approx(state))
+
+
+    def normalize(self, state):
+        # return np.exp(state) / (1 + np.exp(state))
+        return (state - self.state_low)/(self.state_high - self.state_low)
 
 
 

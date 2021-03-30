@@ -12,7 +12,7 @@ def relu(X):
 
 def silu(X):
 
-    sigX = sigmoid(X)
+    sigX = sigmoid(X)[0]
 
     phi = X * sigX
     grad = sigX * (1 + X * (1 - sigX))
@@ -51,9 +51,14 @@ def cross_entropy(pred, actual):
 
 def mse(pred, actual):
 
+    if isinstance(actual, float):
+        size = 1
+    else:
+        size = len(actual)
+
     error = ((actual - pred)**2).mean()
 
-    residual = (pred - actual)/len(actual)
+    residual = (pred - actual)/size
 
 
     return error, residual
@@ -61,5 +66,5 @@ def mse(pred, actual):
 
 
 
-activation_map = {"relu": relu, "tanh": tanh, "sigmoid": sigmoid}
+activation_map = {"relu": relu, "silu": silu , "tanh": tanh, "sigmoid": sigmoid}
 error_map = {"MSE": mse, "CE": cross_entropy}

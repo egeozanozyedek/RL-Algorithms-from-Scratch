@@ -48,7 +48,8 @@ class FullyConnected(object):
         :return:
         """
 
-        # print(X.shape, self.weight.shape)
+        if X.ndim is 1:
+            X = X.reshape(1, -1)
 
         self.__opv["X"] = X
         potential = X @ self.weight + self.bias
@@ -67,7 +68,6 @@ class FullyConnected(object):
         # print(self.nodes, residual.shape, self.__opv["dA"].shape )
 
         residual *= self.__opv["dA"]  # updater residual term
-
         self.__opv["dW"] = self.__opv["X"].T @ residual
         self.__opv["db"] = residual.sum(axis=0, keepdims=True)
 
@@ -99,3 +99,12 @@ class FullyConnected(object):
 
         self.weight -= self.__opv["mW"]
         self.bias -= self.__opv["mb"]
+
+
+
+    def predict(self, X):
+
+        potential = X @ self.weight + self.bias
+        return self.activation(potential)[0]
+
+

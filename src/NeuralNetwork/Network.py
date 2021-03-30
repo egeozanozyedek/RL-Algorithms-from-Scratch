@@ -49,7 +49,12 @@ class Network(object):
 
 
     def predict(self, X):
-        return self.__call_forward(X)
+        next_X = X
+
+        for layer in self.layers:
+            next_X = layer.predict(next_X)
+
+        return next_X
 
 
 
