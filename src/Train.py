@@ -1,4 +1,3 @@
-
 import numpy as np
 from src.Agents.Sarsa import Sarsa
 from src.Agents.DeepSARSA import DeepSARSA
@@ -8,6 +7,12 @@ from src.Agents.DeepSARSA import DeepSARSA
 class Train:
 
     def __init__(self, env, model_name, model_config):
+        """
+        Initializes the model with given configuration to be trained on the given environment
+        :param env: Training environment
+        :param model_name: Model to be trained
+        :param model_config: Configuration for the model
+        """
 
         models = {"Sarsa": Sarsa, "DeepSARSA": DeepSARSA}
 
@@ -21,14 +26,24 @@ class Train:
         print(f"State Space: {self.env.observation_space} \nAction Space: {self.env.action_space}")
 
 
-        # todo: do some box/discreet checking here later
+        # todo: do some box/discrete checking here later
 
         self.model = models[model_name](**model_config)
 
 
 
-
     def train(self, episodes, learning_rate, discount, epsilon, max_steps=None, decay=False, render=False):
+        """
+        Training function, loops for episodes, implemented using Sutton's RL book
+        :param episodes: trial amount
+        :param learning_rate: learning rate
+        :param discount: discount, generally 1
+        :param epsilon: the exploration rate, small or decaying
+        :param max_steps: max steps per episode
+        :param decay: condition on whether to decay exploration and learning rate or not
+        :param render: condition which determines whether the game gets rendered or not
+        :return: steps/reward per episode
+        """
 
         reward_per_episode = []
         steps_per_episode = []
@@ -42,10 +57,9 @@ class Train:
             i = 1
             rewards_sum = 0
 
-            if decay is True and ep % 100 == 0:
-                print(ep)
-                learning_rate /= 1.2
-                epsilon /= 1.2
+            if decay is True and ep % (episodes * 0.2) == 0:  # decay
+                epsilon /= 2.1
+                learning_rate /= 1.1
 
 
             while True:  # loop controlled with termination of state, run until done
@@ -84,6 +98,12 @@ class Train:
 
 
     def greedy_policy(self, state, epsilon):
+        """
+        Greedy policy, more explanation on the report
+        :param state: state vector
+        :param epsilon: exploration rate
+        :return: next action
+        """
 
         if np.random.rand() > epsilon:
             return np.argmax(self.model.q_approx(state))
@@ -92,21 +112,10 @@ class Train:
 
 
     def max_action(self, state):
+        """
+        Returns action that maximizes q function
+        :param state: state vector
+        :return: next action
+        """
         return np.argmax(self.model.q_approx(state))
-
-
-    def normalize(self, state):
-        # return np.exp(state) / (1 + np.exp(state))
-        return (state - self.state_low)/(self.state_high - self.state_low)
-
-
-
-
-
-
-
-
-
-
-
 

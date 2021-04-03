@@ -9,11 +9,11 @@ class FullyConnected(object):
 
     def __init__(self, nodes, activation):
         """
-
+        Initializes important variables
         self.__opv: private member of class, opv being an abbreviation for one pass variables
 
-        :param nodes:
-        :param activation:
+        :param nodes: output of layer
+        :param activation: the activation function of layer
         """
 
 
@@ -26,13 +26,11 @@ class FullyConnected(object):
         self.activation = activation_map[activation]
 
 
-
-
     def initialize(self, input_size):
         """
         Xavier Initialization for layer parameters
-        :param input_size:
-        :return:
+        :param input_size: input size of this layer
+        :return: output size of this layer / layer nodes
         """
 
         init = np.sqrt(6/(input_size + self.nodes))
@@ -43,7 +41,7 @@ class FullyConnected(object):
 
     def forward_pass(self, X):
         """
-
+        Forward pass of layer
         :param X:
         :return:
         """
@@ -60,9 +58,9 @@ class FullyConnected(object):
 
     def backward_pass(self, residual):
         """
-
+        Backward pass of layer, gradient descent
         :param residual: The residual error gradient from the earlier layer
-        :return:
+        :return: the next iteration residual
         """
 
         # print(self.nodes, residual.shape, self.__opv["dA"].shape )
@@ -79,7 +77,7 @@ class FullyConnected(object):
     def update(self, learning_rate, momentum_rate):
         """
 
-
+        Updates layer weight and bias
 
         dW: gradient of weight(t)
         db: gradient of bias(t)
@@ -90,7 +88,6 @@ class FullyConnected(object):
 
         :param learning_rate: learning rate for update
         :param momentum_rate: momentum_rate for updatte
-        :return:
         """
 
 
@@ -103,6 +100,11 @@ class FullyConnected(object):
 
 
     def predict(self, X):
+        """
+        Predicts given output using layer weight and bias
+        :param X: Input vector/matrix
+        :return: the predicted value
+        """
 
         potential = X @ self.weight + self.bias
         return self.activation(potential)[0]

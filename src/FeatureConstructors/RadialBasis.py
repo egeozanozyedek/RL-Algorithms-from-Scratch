@@ -1,10 +1,16 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class RBF:
 
     def __init__(self, order, state_dim, low, high):
+        """
+        Radial Basis Function for feature construction
+        :param order: n divisions for each dimension of the state vector
+        :param state_dim: dimension of state vector
+        :param low: min values of state features, for normalization
+        :param high: max values of state features, for normalization
+        """
 
         self.order = order
         self.state_dim = state_dim
@@ -19,6 +25,9 @@ class RBF:
 
 
     def create_centers(self):
+        """
+        Creates centers of each RBF, centers are evenly distributed
+        """
 
         partition = np.linspace(0, 1, self.order)
 
@@ -27,7 +36,13 @@ class RBF:
 
         self.centers = centers.tolist()
 
+
     def transform(self, state):
+        """
+        Creates features
+        :param state: the state vector from which the features will be created
+        :return: constructed features
+        """
 
         state = self.normalize(state)
 
@@ -37,10 +52,18 @@ class RBF:
             norm = np.linalg.norm(state - c)**2
             features[index] = np.exp(-norm/(2 * self.variance))
 
+
+        features = np.where(features > 0.95, 1, 0)
+
         return features
 
 
 
     def normalize(self, state):
+        """
+        Normalizes given input
+        :param state: the state vector from which the features will be created
+        :return: normalized state vector
+        """
         # return np.exp(state) / (1 + np.exp(state))
         return (state - self.low)/(self.high - self.low)

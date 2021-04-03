@@ -5,15 +5,16 @@ from src.NeuralNetwork.Layers.nn_toolkit import error_map
 class Network(object):
 
     def __init__(self, layers, input_size, error_function):
+        """
+        Initializes important network parameters
+        :param layers: Network layers
+        :param input_size: input size of first layer and also the network
+        :param error_function: MSE or CE
+        """
 
         self.layers = layers
         self.input_size = input_size
         self.error_function = error_map[error_function]
-        self.__initialize()
-
-
-
-    def __initialize(self):
 
         next_size = self.input_size
 
@@ -22,7 +23,16 @@ class Network(object):
 
 
 
-    def fit(self, X, Y, epoch, learning_rate, momentum_rate, batch_size=None):
+    def fit(self, X, Y, epoch, learning_rate, momentum_rate):
+        """
+        Update network weights by forward and backward passes
+        :param X: input
+        :param Y: labels
+        :param epoch: trials
+        :param learning_rate: learning rate
+        :param momentum_rate: momentum rate
+        :return: a list of losses at each epoch
+        """
 
         loss_list = []
 
@@ -34,6 +44,19 @@ class Network(object):
         return pred, loss_list
 
 
+    def predict(self, X):
+        """
+        Predict for given input using network weights
+        :param X: input
+        :return: the prediction
+        """
+
+        next_X = X
+
+        for layer in self.layers:
+            next_X = layer.predict(next_X)
+
+        return next_X
 
 
     def __fit_instance(self, X, Y, learning_rate, momentum_rate):
@@ -44,19 +67,6 @@ class Network(object):
         self.__call_update(learning_rate, momentum_rate)
 
         return prediction, loss
-
-
-
-
-    def predict(self, X):
-        next_X = X
-
-        for layer in self.layers:
-            next_X = layer.predict(next_X)
-
-        return next_X
-
-
 
 
     def __call_forward(self, X):
@@ -75,8 +85,6 @@ class Network(object):
 
         for layer in reversed(self.layers):
             next_residual = layer.backward_pass(next_residual)
-
-
 
 
     def __call_update(self, learning_rate, momentum_rate):
