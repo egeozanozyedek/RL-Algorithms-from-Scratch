@@ -37,6 +37,14 @@ def sigmoid(X):
     return phi, grad
 
 
+def linear(X):
+
+    phi = X
+    grad = 1
+
+    return phi, grad
+
+
 def cross_entropy(pred, actual):
 
 
@@ -67,5 +75,5 @@ def mse(pred, actual):
 
 
 
-activation_map = {"relu": relu, "silu": silu , "tanh": tanh, "sigmoid": sigmoid}
+activation_map = {"relu": relu, "silu": silu , "tanh": tanh, "sigmoid": sigmoid, "linear": linear}
 error_map = {"MSE": mse, "CE": cross_entropy}
