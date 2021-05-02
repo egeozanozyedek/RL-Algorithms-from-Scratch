@@ -38,7 +38,7 @@ target_update_count = 0
 
 # Network
 layers = [FullyConnected(24, "relu"), FullyConnected(12, "relu"), FullyConnected(n_a, "relu")]
-net = Network(layers, n_s, "MSE") # Huber loss, He init
+net = Network(layers, n_s, "MSE", optimizer="adam") # Huber loss, He init
 
 # pred, loss = net.fit(X, Y, epoch=200, learning_rate=.4, momentum_rate=.3)
 # test_p = net.predict(X_t)
@@ -112,7 +112,7 @@ for i_episode in range(n_episodes):
             rewards = np.array([sample[2] for sample in mini_batch])
             Y = (gamma * q_target + rewards).reshape(-1,1)
             Y = np.hstack([Y,Y])
-            pred, loss = net.fit(obs, Y, epoch=1, learning_rate=.001, momentum_rate=.3)
+            pred, loss = net.fit(obs, Y, epoch=1, mini_batch_size=64, learning_rate=.001)
 
 
         if done:

@@ -32,7 +32,7 @@ re = []
 se = []
 
 for i in range(1):
-    reward_per_episode, steps_per_episode = trainer.train(episodes=1000, learning_rate=0.025, discount=1, epsilon=1, max_steps=500, decay=True, render=False)
+    reward_per_episode, steps_per_episode = trainer.train(episodes=1000, learning_rate=0.05, discount=1, epsilon=1, max_steps=500, decay=True, render=True)
     re.append(reward_per_episode)
     se.append(steps_per_episode)
 

@@ -4,7 +4,7 @@ from src.NeuralNetwork.Layers.nn_toolkit import error_map
 
 class Network(object):
 
-    def __init__(self, layers, input_size, error_function):
+    def __init__(self, layers, input_size, error_function, optimizer="sgd"):
         """
         Initializes important network parameters
         :param layers: Network layers
@@ -19,27 +19,54 @@ class Network(object):
         next_size = self.input_size
 
         for layer in self.layers:
-            next_size = layer.initialize(next_size)
+            next_size = layer.initialize(next_size, optimizer)
 
 
 
-    def fit(self, X, Y, epoch, learning_rate, momentum_rate):
+    def fit(self, X, Y, epoch, mini_batch_size, learning_rate):
         """
         Update network weights by forward and backward passes
+        :param mini_batch_size:
         :param X: input
         :param Y: labels
         :param epoch: trials
         :param learning_rate: learning rate
-        :param momentum_rate: momentum rate
         :return: a list of losses at each epoch
         """
 
+
+        sample_size = X.shape[0]
+        iter_per_epoch = int(sample_size / mini_batch_size)
         loss_list = []
 
-        for ep in range(epoch):
+        for i in range(epoch):
 
-            pred, loss = self.__fit_instance(X, Y, learning_rate, momentum_rate)
-            loss_list.append(loss)
+            start = 0
+            end = mini_batch_size
+
+
+            p = np.random.permutation(X.shape[0])
+            shuffledX = X[p]
+            shuffledY = Y[p]
+
+
+            loss_sum = 0
+
+
+            for it in range(iter_per_epoch):
+
+                batchX = shuffledX[start:end]
+                batchY = shuffledY[start:end]
+
+                pred, loss = self.__fit_instance(batchX, batchY, learning_rate)
+
+                loss_sum += loss
+
+                start = end
+                end += mini_batch_size
+
+
+            loss_list.append(loss_sum/iter_per_epoch)
 
         return pred, loss_list
 
@@ -59,12 +86,12 @@ class Network(object):
         return next_X
 
 
-    def __fit_instance(self, X, Y, learning_rate, momentum_rate):
+    def __fit_instance(self, X, Y, learning_rate, config=None):
 
         prediction = self.__call_forward(X)
         loss, residual = self.__calculate_error(prediction, Y)
         self.__call_backward(residual)
-        self.__call_update(learning_rate, momentum_rate)
+        self.__call_update(learning_rate, config=config)
 
         return prediction, loss
 
@@ -87,10 +114,10 @@ class Network(object):
             next_residual = layer.backward_pass(next_residual)
 
 
-    def __call_update(self, learning_rate, momentum_rate):
+    def __call_update(self, learning_rate, config):
 
         for layer in self.layers:
-            layer.update(learning_rate, momentum_rate)
+            layer.update(learning_rate, config)
 
 
 

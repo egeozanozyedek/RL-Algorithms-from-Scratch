@@ -20,23 +20,31 @@ class FullyConnected(object):
         self.weight = None
         self.bias = None
 
-        self.__opv = {"X": None, "dW": None, "db": None, "dA": None, "mW": 0, "mb": 0}
+        self.__opv = {"X": None, "dW": None, "db": None, "dA": None, "mW": 0, "mb": 0, "sW": 0, "sb": 0}
 
         self.nodes = nodes
         self.activation = activation_map[activation]
+        self.optimizer = None
+        self.iteration = 1
 
 
-    def initialize(self, input_size):
+    def initialize(self, input_size, optimizer):
         """
         Xavier Initialization for layer parameters
         :param input_size: input size of this layer
         :return: output size of this layer / layer nodes
         """
 
+        self.optimizer = optimizer
         init = np.sqrt(6/(input_size + self.nodes))
         self.weight = np.random.uniform(-init, init, size=(input_size, self.nodes))
         self.bias = np.zeros((1, self.nodes))
+
+        # self.weight = np.zeros((input_size, self.nodes))
+        # self.bias = np.zeros((1, self.nodes))
+
         return self.nodes
+
 
 
     def forward_pass(self, X):
@@ -74,7 +82,7 @@ class FullyConnected(object):
 
 
 
-    def update(self, learning_rate, momentum_rate):
+    def update(self, learning_rate, config):
         """
 
         Updates layer weight and bias
@@ -91,11 +99,54 @@ class FullyConnected(object):
         """
 
 
-        self.__opv["mW"] = learning_rate * self.__opv["dW"] + momentum_rate * self.__opv["mW"]
-        self.__opv["mb"] = learning_rate * self.__opv["db"] + momentum_rate * self.__opv["mb"]
+        if self.optimizer == "sgd":
 
-        self.weight -= self.__opv["mW"]
-        self.bias -= self.__opv["mb"]
+            if config is None:
+                momentum_rate = 0.1
+            else:
+                momentum_rate = config
+
+            self.__opv["mW"] = learning_rate * self.__opv["dW"] + momentum_rate * self.__opv["mW"]
+            self.__opv["mb"] = learning_rate * self.__opv["db"] + momentum_rate * self.__opv["mb"]
+
+            self.weight -= self.__opv["mW"]
+            self.bias -= self.__opv["mb"]
+
+        if self.optimizer == "adam":
+
+
+
+            if config is None:
+                beta1 = 0.9
+                beta2 = 0.999
+                epsilon = 1e-8
+            else:
+                beta1, beta2, epsilon = config
+
+            self.__opv["mW"] = (1 - beta1) * self.__opv["dW"] + beta1 * self.__opv["mW"]
+            self.__opv["mb"] = (1 - beta1) * self.__opv["db"] + beta1 * self.__opv["mb"]
+
+            self.__opv["sW"] = (1 - beta2) * np.square(self.__opv["dW"]) + beta2 * self.__opv["sW"]
+            self.__opv["sb"] = (1 - beta2) * np.square(self.__opv["db"]) + beta2 * self.__opv["sb"]
+
+
+
+
+            # self.__opv["mW"] /= 1 - beta1 ** self.iteration
+            # self.__opv["mb"] /= 1 - beta1 ** self.iteration
+            #
+            # self.__opv["sW"] /= 1 - beta2 ** self.iteration
+            # self.__opv["sb"] /= 1 - beta2 ** self.iteration
+
+
+            self.weight -= learning_rate * self.__opv["mW"]/(np.sqrt(self.__opv["sW"]) + epsilon)
+            self.bias -= learning_rate * self.__opv["mb"]/(np.sqrt(self.__opv["sb"]) + epsilon)
+
+            self.iteration += 1
+
+
+
+
 
 
 
