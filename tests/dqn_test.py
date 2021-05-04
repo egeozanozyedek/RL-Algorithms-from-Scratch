@@ -84,6 +84,7 @@ for i_episode in range(n_episodes):
         # Add to replay memory
         replay_memory.append([observation, action, reward, observationPrime, done])  # s_t, a_t, r_t, s_(t+1)'
 
+
         # Update obs
         observation = observationPrime
         total_reward += reward
