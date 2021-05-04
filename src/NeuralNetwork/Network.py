@@ -4,7 +4,7 @@ from src.NeuralNetwork.Layers.nn_toolkit import error_map
 
 class Network(object):
 
-    def __init__(self, layers, input_size, error_function, optimizer="sgd"):
+    def __init__(self, layers, input_size, error_function=None, optimizer="sgd"):
         """
         Initializes important network parameters
         :param layers: Network layers
@@ -14,7 +14,9 @@ class Network(object):
 
         self.layers = layers
         self.input_size = input_size
-        self.error_function = error_map[error_function]
+
+        if error_function:
+            self.error_function = error_map[error_function]
 
         next_size = self.input_size
 
@@ -125,6 +127,8 @@ class Network(object):
         error, residual = self.error_function(pred, actual)
 
         return error, residual
+
+
 
 
 

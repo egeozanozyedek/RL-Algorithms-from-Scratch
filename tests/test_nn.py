@@ -1,3 +1,4 @@
+
 import h5py
 
 from src.NeuralNetwork.Network import Network
@@ -52,3 +53,4 @@ plt.title("MSE")
 plt.xlabel("Epoch")
 # plt.show()
 plt.savefig("../figures/report1/NN_testsgd.png",  bbox_inches = 'tight')
+

@@ -1,6 +1,6 @@
 import numpy as  np
 from matplotlib import pyplot as plt, cm
-from src.Agents.Sarsa import Sarsa
+from src.Agents.SARSA.Sarsa import Sarsa
 import gym
 
 from src.FeatureConstructors.RadialBasis import RBF

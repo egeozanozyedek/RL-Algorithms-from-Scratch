@@ -1,6 +1,6 @@
 import numpy as np
-from src.Agents.Sarsa import Sarsa
-from src.Agents.DeepSARSA import DeepSARSA
+from src.Agents.SARSA.Sarsa import Sarsa
+from src.Agents.SARSA.DeepSARSA import DeepSARSA
 
 
 

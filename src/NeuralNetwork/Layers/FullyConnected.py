@@ -114,8 +114,6 @@ class FullyConnected(object):
 
         if self.optimizer == "adam":
 
-
-
             if config is None:
                 beta1 = 0.9
                 beta2 = 0.999
@@ -143,10 +141,6 @@ class FullyConnected(object):
             self.bias -= learning_rate * self.__opv["mb"]/(np.sqrt(self.__opv["sb"]) + epsilon)
 
             self.iteration += 1
-
-
-
-
 
 
 
