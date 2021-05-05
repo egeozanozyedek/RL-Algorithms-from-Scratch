@@ -6,8 +6,12 @@ from matplotlib import pyplot as plt
 import gym
 import numpy as np
 from copy import deepcopy
+from utils.calc import window_avg
+import atari_py
+print(atari_py.list_games())
 
-env = gym.make("Breakout-ram-v0").env
+env = gym.make("SpaceInvaders-ram-v0")
+#env = gym.make("CartPole-v0").env
 
 
 state_dim = env.observation_space.shape[0]
@@ -17,7 +21,7 @@ state_high = env.observation_space.high
 
 
 # Network
-layers = [FullyConnected(24, "relu"), FullyConnected(12, "relu"), FullyConnected(action_dim, "linear")]
+layers = [FullyConnected(64, "relu"), FullyConnected(128, "relu"), FullyConnected(action_dim, "linear")]
 net = Network(layers, state_dim, "MSE", optimizer="sgd") # Huber loss, He init
 
 # Target Network
@@ -37,9 +41,9 @@ re = []
 se = []
 
 for i in range(1):
-    reward_per_episode, steps_per_episode = trainer.train_dqn(episodes=200, time_steps=1000, C=4, min_replay_count=1024,
-                                                              batch_size=128, learning_rate=0.00125, discount=0.7, epsilon=0.01,
-                                                              max_steps=None, decay=True, render=True)
+    reward_per_episode, steps_per_episode = trainer.train_dqn(episodes=200, time_steps=10000, C=4, min_replay_count=int(1024),
+                                                              batch_size=int(128), learning_rate=0.00125, discount=0.99, epsilon=0.01,
+                                                              max_steps=None, decay=True, render=False)
     re.append(reward_per_episode)
     se.append(steps_per_episode)
 
@@ -69,3 +73,17 @@ plt.show()
 plt.savefig("dqn.png")
 
 # trainer.model.save_weights()
+
+# Calculate the window average, to understand when it completes the task
+windowed = window_avg(np.array(reward_per_episode), window_size=50, threshold=-1)
+print(windowed[1])
+
+plt.figure(figsize=(12, 8), dpi=160)
+plt.xlabel("Episode")
+plt.ylabel("Time Steps Taken")
+plt.plot(windowed[0], "C4")
+plt.show()
+plt.savefig("dqn_windowed.png")
+
+
+

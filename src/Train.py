@@ -137,7 +137,7 @@ class Train:
 
             for t in range(time_steps):
 
-                if render is True:  # for visualization
+                if render is True and ep > 150:  # for visualization
                     self.env.render()
 
                 # With probability epsilon select a random action a_t, otherwise select at = max_a Q(s_t, a; θ)
@@ -165,6 +165,8 @@ class Train:
                 # Sample random mini batch from replay memory
                 if len(self.model.replay_memory) < min_replay_count:
                     continue
+
+
 
 
                 mini_batch = random.sample(self.model.replay_memory, batch_size)
