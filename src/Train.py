@@ -3,6 +3,7 @@ import random
 import numpy as np
 from src.Agents.SARSA.Sarsa import Sarsa
 from src.Agents.SARSA.DeepSARSA import DeepSARSA
+from src.Agents.DQN.DQN import DQN
 
 
 
@@ -16,14 +17,14 @@ class Train:
         :param model_config: Configuration for the model
         """
 
-        models = {"Sarsa": Sarsa, "DeepSARSA": DeepSARSA}
+        models = {"Sarsa": Sarsa, "DeepSARSA": DeepSARSA, "DQN": DQN}
 
         self.env = env
 
         if model_name is "Sarsa"or "DeepSARSA":
             self.model_type = "SARSA"
         elif model_name is "DQN":
-            self.model_type = "QLearning"
+            self.model_type = "DQN"
 
         print(f"State Space: {self.env.observation_space} \nAction Space: {self.env.action_space}")
 
@@ -127,9 +128,11 @@ class Train:
             i = 1
             rewards_sum = 0
 
-            if decay is True and ep % (episodes * 0.2) == 0:  # decay
+            if decay is True and ep == 40:  # decay
                 epsilon /= 2.1
                 learning_rate /= 1.1
+
+            print(ep, "ep")
 
 
             for t in range(time_steps):
@@ -139,6 +142,8 @@ class Train:
 
                 # With probability epsilon select a random action a_t, otherwise select at = max_a Q(s_t, a; θ)
                 action = self.greedy_policy(state, epsilon)
+                # print("action")
+                # print(action)
 
 
                 # Execute action at in emulator and observe reward r_t and s_t
@@ -148,34 +153,32 @@ class Train:
                 # Store transition in replay memory
                 self.model.replay_memory.append([state, action, reward, next_state, terminate])  # s_t, a_t, r_t, s_(t+1)'
 
-
-                # Sample random mini batch from replay memory
-                if len(self.model.replay_memory) < min_replay_count:
-                    continue
-
-                mini_batch = random.sample(self.model.replay_memory, batch_size)
-
-
-
+                state = next_state
 
                 # to find average reward for the episode, hold a sum of all rewards and the steps taken
                 i += 1
                 rewards_sum += reward
 
-                if terminate is True or (max_steps is not None and i > max_steps):  # in termination, update using only current state-action, and break out of this episode
-                    self.model.update(state, action, reward, learning_rate=learning_rate, discount=discount, terminate=True)
+                if terminate:
                     break
 
-                if self.model_type is "SARSA":
-                    # else get next action using the next state, update following the SARSA rule
-                    next_action = self.greedy_policy(next_state, epsilon)
-                self.model.update(state, action, reward, next_state=next_state, next_action=next_action,
-                                  learning_rate=learning_rate, discount=discount)
+                # Sample random mini batch from replay memory
+                if len(self.model.replay_memory) < min_replay_count:
+                    continue
 
-                # update current state-action
 
-                state = next_state
-                action = next_action
+                mini_batch = random.sample(self.model.replay_memory, batch_size)
+
+                self.model.update(mini_batch, learning_rate, discount)
+
+
+                # Update target network weights
+                if t % C == 0:
+                    self.model.update_target()
+
+
+
+
 
             reward_per_episode.append(rewards_sum)
             steps_per_episode.append(i)
@@ -195,6 +198,9 @@ class Train:
         """
 
         if np.random.rand() > epsilon:
+            # print("state", state)
+            # print("self.model.q_approx(state)")
+            # print(self.model.q_approx(state))
             return np.argmax(self.model.q_approx(state))
         else:
             return self.env.action_space.sample()
