@@ -10,23 +10,17 @@ class Actor(Network):
         self.target_layers = copy.deepcopy(self.layers)
         self.action_bound = action_bound
 
-        for tl, l in zip(self.target_layers, self.layers):
-            assert (tl.weight == l.weight).all()
-            assert (tl.bias == l.bias).all()
 
 
+    def update(self, grad, state, learning_rate):
 
-    def update(self, grad, replay_batch, learning_rate):
-
-        state = replay_batch[0]
         super()._call_forward(state)
-        super()._call_backward(grad) # todo: maybe grad @ act instead of *
+        super()._call_backward(self.action_bound * grad) # todo: maybe minus grad
         self._call_update(learning_rate)
 
 
     def predict(self, X):
-        res = super().predict(X) * self.action_bound
-        return res
+        return super().predict(X) * self.action_bound
 
 
 
@@ -37,16 +31,9 @@ class Actor(Network):
         for layer in self.target_layers:
             next_X = layer.predict(next_X)
 
-        return next_X
+        return next_X * self.action_bound
 
-
-
-    def _call_update(self, learning_rate, config=None):
-
-        tau = 0.001
-
+    def target_update(self, tau):
         for target_layer, layer in zip(self.target_layers, self.layers):
-            layer.update(learning_rate, config)
             target_layer.weight = (1 - tau) * target_layer.weight + tau * layer.weight
             target_layer.bias = (1 - tau) * target_layer.bias + tau * layer.bias
-

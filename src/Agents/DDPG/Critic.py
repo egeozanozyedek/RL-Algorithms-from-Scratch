@@ -14,7 +14,6 @@ class Critic(Network):
         for state_layer in self.state_layers:
             state_next_size = state_layer.initialize(state_next_size, optimizer)
 
-
         self.action_layers = action_layers
         action_next_size = action_dim
         for action_layer in self.action_layers:
@@ -23,12 +22,14 @@ class Critic(Network):
         self.state_dim = state_next_size
         self.action_dim = action_next_size
 
-        super().__init__(layers, state_next_size, "MSE", optimizer=optimizer)
+        super().__init__(layers, action_next_size + state_next_size, "MSE", optimizer=optimizer)
 
 
         self.target_layers = copy.deepcopy(self.layers)
         self.target_state_layers = copy.deepcopy(self.state_layers)
         self.target_action_layers = copy.deepcopy(self.action_layers)
+
+
 
 
 
@@ -38,7 +39,7 @@ class Critic(Network):
 
         Y = reward.reshape(-1, 1) + discount_rate * self.target_predict((next_state, next_action))
 
-        _, loss = self._fit_instance((state, action), Y, learning_rate)
+        _, loss = super()._fit_instance((state, action), Y, learning_rate)
 
         return loss
 
@@ -47,15 +48,15 @@ class Critic(Network):
 
     def predict(self, X):
         ns, na = X
-
+        print("a")
         for state_layer in self.state_layers:
             ns = state_layer.predict(ns)
 
         for action_layer in self.action_layers:
             na = action_layer.predict(na)
 
-        # concat = np.hstack((ns, na))
-        concat = ns + na
+        concat = np.hstack((ns, na))
+        # concat = ns + na
 
         next_X = concat
 
@@ -74,8 +75,8 @@ class Critic(Network):
         for action_layer in self.target_action_layers:
             na = action_layer.predict(na)
 
-        # concat = np.hstack((ns, na))
-        concat = ns + na
+        concat = np.hstack((ns, na))
+        # concat = ns + na
 
         next_X = concat
 
@@ -88,15 +89,18 @@ class Critic(Network):
 
 
 
-    def action_grad(self, N):
+    def action_grad(self, state, action, N):
 
-        next_residual = np.ones((N, 1))/N
+
+        out = self._call_forward((state, action))
+
+        next_residual = np.ones_like(out)/N
 
         for layer in reversed(self.layers):
             next_residual = layer.backward_pass(next_residual)
 
-        # action_residual = next_residual[:, self.state_dim:]
-        action_residual = next_residual
+        action_residual = next_residual[:, self.state_dim:]
+        # action_residual = next_residual
 
         for action_layer in reversed(self.action_layers):
             action_residual = action_layer.backward_pass(action_residual)
@@ -107,6 +111,7 @@ class Critic(Network):
 
 
     def _call_forward(self, X):
+
         ns, na = X
 
         for state_layer in self.state_layers:
@@ -116,8 +121,8 @@ class Critic(Network):
             na = action_layer.forward_pass(na)
 
 
-        # concat = np.hstack((ns, na))
-        concat = ns + na
+        concat = np.hstack((ns, na))
+        # concat = ns + na
 
 
         next_X = concat
@@ -140,9 +145,9 @@ class Critic(Network):
             next_residual = layer.backward_pass(next_residual)
 
 
-        # state_residual, action_residual = next_residual[:, :self.state_dim], next_residual[:, self.state_dim:]
-        state_residual = next_residual
-        action_residual = next_residual
+        state_residual, action_residual = next_residual[:, :self.state_dim], next_residual[:, self.state_dim:]
+        # state_residual = next_residual
+        # action_residual = next_residual
 
 
         for state_layer in reversed(self.state_layers):
@@ -154,27 +159,29 @@ class Critic(Network):
 
 
 
-
     def _call_update(self, learning_rate, config=None):
 
-        tau = 0.001
+        for layer in self.layers:
+            layer.update(learning_rate, config)
+
+        for layer in self.state_layers:
+            layer.update(learning_rate, config)
+
+        for layer in self.action_layers:
+            layer.update(learning_rate, config)
+
+
+    def target_update(self, tau):
 
         for target_layer, layer in zip(self.target_layers, self.layers):
-            layer.update(learning_rate, config)
             target_layer.weight = (1 - tau) * target_layer.weight + tau * layer.weight
             target_layer.bias = (1 - tau) * target_layer.bias + tau * layer.bias
 
         for target_layer, layer in zip(self.target_state_layers, self.state_layers):
-            layer.update(learning_rate, config)
             target_layer.weight = (1 - tau) * target_layer.weight + tau * layer.weight
             target_layer.bias = (1 - tau) * target_layer.bias + tau * layer.bias
 
         for target_layer, layer in zip(self.target_action_layers, self.action_layers):
-            layer.update(learning_rate, config)
             target_layer.weight = (1 - tau) * target_layer.weight + tau * layer.weight
             target_layer.bias = (1 - tau) * target_layer.bias + tau * layer.bias
-
-
-
-
 

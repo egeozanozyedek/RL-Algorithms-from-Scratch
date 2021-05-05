@@ -24,7 +24,6 @@ class FullyConnected(object):
         self.nodes = nodes
         self.activation = activation_map[activation]
         self.optimizer = None
-        self.iteration = 1
 
 
 
@@ -37,8 +36,8 @@ class FullyConnected(object):
 
         self.optimizer = optimizer
         init = np.sqrt(6/(input_size + self.nodes))
-        self.weight = np.random.uniform(-init, init, size=(input_size, self.nodes))
-        self.bias = np.zeros((1, self.nodes))
+        self.weight = np.random.uniform(-init, init, size=(input_size, self.nodes)).astype("float32")
+        self.bias = np.zeros((1, self.nodes)).astype("float32")
 
 
         return self.nodes
@@ -60,7 +59,6 @@ class FullyConnected(object):
         potential = X @ self.weight + self.bias
         phi, self.opv["dA"] = self.activation(potential)
 
-        # print(X.shape, self.weight.shape)
 
         return phi
 
@@ -104,7 +102,7 @@ class FullyConnected(object):
         if self.optimizer == "sgd":
 
             if config is None:
-                momentum_rate = 0.1
+                momentum_rate = 0.9
             else:
                 momentum_rate = config
 
@@ -139,8 +137,6 @@ class FullyConnected(object):
 
             self.weight -= learning_rate * self.opv["mW"]/(np.sqrt(self.opv["sW"]) + epsilon)
             self.bias -= learning_rate * self.opv["mb"]/(np.sqrt(self.opv["sb"]) + epsilon)
-
-            self.iteration += 1
 
 
 
