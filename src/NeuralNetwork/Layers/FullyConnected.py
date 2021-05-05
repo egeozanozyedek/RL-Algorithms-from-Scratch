@@ -1,7 +1,6 @@
 import numpy as np
 from src.NeuralNetwork.Layers.nn_toolkit import activation_map
-
-
+from numba import jit
 
 
 class FullyConnected(object):
@@ -10,7 +9,7 @@ class FullyConnected(object):
     def __init__(self, nodes, activation):
         """
         Initializes important variables
-        self.__opv: private member of class, opv being an abbreviation for one pass variables
+        self.opv: private member of class, opv being an abbreviation for one pass variables
 
         :param nodes: output of layer
         :param activation: the activation function of layer
@@ -20,12 +19,13 @@ class FullyConnected(object):
         self.weight = None
         self.bias = None
 
-        self.__opv = {"X": None, "dW": None, "db": None, "dA": None, "mW": 0, "mb": 0, "sW": 0, "sb": 0}
+        self.opv = {"X": None, "dW": None, "db": None, "dA": None, "mW": 0, "mb": 0, "sW": 0, "sb": 0}
 
         self.nodes = nodes
         self.activation = activation_map[activation]
         self.optimizer = None
         self.iteration = 1
+
 
 
     def initialize(self, input_size, optimizer):
@@ -40,8 +40,6 @@ class FullyConnected(object):
         self.weight = np.random.uniform(-init, init, size=(input_size, self.nodes))
         self.bias = np.zeros((1, self.nodes))
 
-        # self.weight = np.zeros((input_size, self.nodes))
-        # self.bias = np.zeros((1, self.nodes))
 
         return self.nodes
 
@@ -53,13 +51,16 @@ class FullyConnected(object):
         :param X:
         :return:
         """
-
+        # print(X.shape, self.weight.shape, self.bias.shape)
         if X.ndim is 1:
             X = X.reshape(1, -1)
 
-        self.__opv["X"] = X
+
+        self.opv["X"] = X
         potential = X @ self.weight + self.bias
-        phi, self.__opv["dA"] = self.activation(potential)
+        phi, self.opv["dA"] = self.activation(potential)
+
+        # print(X.shape, self.weight.shape)
 
         return phi
 
@@ -71,11 +72,12 @@ class FullyConnected(object):
         :return: the next iteration residual
         """
 
-        # print(self.nodes, residual.shape, self.__opv["dA"].shape )
+        # print(self.nodes, residual.shape, self.opv["dA"].shape )
+        # print(residual.shape, self.opv["X"].shape, self.weight.shape, self.opv["dA"])
 
-        residual *= self.__opv["dA"]  # updater residual term
-        self.__opv["dW"] = self.__opv["X"].T @ residual
-        self.__opv["db"] = residual.sum(axis=0, keepdims=True)
+        residual *= self.opv["dA"]  # updater residual term
+        self.opv["dW"] = self.opv["X"].T @ residual
+        self.opv["db"] = residual.sum(axis=0, keepdims=True)
 
         return residual @ self.weight.T
 
@@ -106,11 +108,11 @@ class FullyConnected(object):
             else:
                 momentum_rate = config
 
-            self.__opv["mW"] = learning_rate * self.__opv["dW"] + momentum_rate * self.__opv["mW"]
-            self.__opv["mb"] = learning_rate * self.__opv["db"] + momentum_rate * self.__opv["mb"]
+            self.opv["mW"] = learning_rate * self.opv["dW"] + momentum_rate * self.opv["mW"]
+            self.opv["mb"] = learning_rate * self.opv["db"] + momentum_rate * self.opv["mb"]
 
-            self.weight -= self.__opv["mW"]
-            self.bias -= self.__opv["mb"]
+            self.weight -= self.opv["mW"]
+            self.bias -= self.opv["mb"]
 
         if self.optimizer == "adam":
 
@@ -121,24 +123,22 @@ class FullyConnected(object):
             else:
                 beta1, beta2, epsilon = config
 
-            self.__opv["mW"] = (1 - beta1) * self.__opv["dW"] + beta1 * self.__opv["mW"]
-            self.__opv["mb"] = (1 - beta1) * self.__opv["db"] + beta1 * self.__opv["mb"]
+            self.opv["mW"] = (1 - beta1) * self.opv["dW"] + beta1 * self.opv["mW"]
+            self.opv["mb"] = (1 - beta1) * self.opv["db"] + beta1 * self.opv["mb"]
 
-            self.__opv["sW"] = (1 - beta2) * np.square(self.__opv["dW"]) + beta2 * self.__opv["sW"]
-            self.__opv["sb"] = (1 - beta2) * np.square(self.__opv["db"]) + beta2 * self.__opv["sb"]
-
-
+            self.opv["sW"] = (1 - beta2) * np.square(self.opv["dW"]) + beta2 * self.opv["sW"]
+            self.opv["sb"] = (1 - beta2) * np.square(self.opv["db"]) + beta2 * self.opv["sb"]
 
 
-            # self.__opv["mW"] /= 1 - beta1 ** self.iteration
-            # self.__opv["mb"] /= 1 - beta1 ** self.iteration
+            # self.opv["mW"] /= 1 - beta1 ** self.iteration
+            # self.opv["mb"] /= 1 - beta1 ** self.iteration
             #
-            # self.__opv["sW"] /= 1 - beta2 ** self.iteration
-            # self.__opv["sb"] /= 1 - beta2 ** self.iteration
+            # self.opv["sW"] /= 1 - beta2 ** self.iteration
+            # self.opv["sb"] /= 1 - beta2 ** self.iteration
 
 
-            self.weight -= learning_rate * self.__opv["mW"]/(np.sqrt(self.__opv["sW"]) + epsilon)
-            self.bias -= learning_rate * self.__opv["mb"]/(np.sqrt(self.__opv["sb"]) + epsilon)
+            self.weight -= learning_rate * self.opv["mW"]/(np.sqrt(self.opv["sW"]) + epsilon)
+            self.bias -= learning_rate * self.opv["mb"]/(np.sqrt(self.opv["sb"]) + epsilon)
 
             self.iteration += 1
 

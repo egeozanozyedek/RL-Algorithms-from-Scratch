@@ -60,7 +60,7 @@ class Network(object):
                 batchX = shuffledX[start:end]
                 batchY = shuffledY[start:end]
 
-                pred, loss = self.__fit_instance(batchX, batchY, learning_rate)
+                pred, loss = self._fit_instance(batchX, batchY, learning_rate)
 
                 loss_sum += loss
 
@@ -88,17 +88,17 @@ class Network(object):
         return next_X
 
 
-    def __fit_instance(self, X, Y, learning_rate, config=None):
+    def _fit_instance(self, X, Y, learning_rate, config=None):
 
-        prediction = self.__call_forward(X)
-        loss, residual = self.__calculate_error(prediction, Y)
-        self.__call_backward(residual)
-        self.__call_update(learning_rate, config=config)
+        prediction = self._call_forward(X)
+        loss, residual = self._calculate_error(prediction, Y)
+        self._call_backward(residual)
+        self._call_update(learning_rate, config=config)
 
         return prediction, loss
 
 
-    def __call_forward(self, X):
+    def _call_forward(self, X):
 
         next_X = X
 
@@ -108,7 +108,7 @@ class Network(object):
 
 
 
-    def __call_backward(self, residual):
+    def _call_backward(self, residual):
 
         next_residual = residual
 
@@ -116,17 +116,18 @@ class Network(object):
             next_residual = layer.backward_pass(next_residual)
 
 
-    def __call_update(self, learning_rate, config):
+    def _call_update(self, learning_rate, config=None):
 
         for layer in self.layers:
             layer.update(learning_rate, config)
 
 
 
-    def __calculate_error(self, pred, actual):
+    def _calculate_error(self, pred, actual):
         error, residual = self.error_function(pred, actual)
 
         return error, residual
+
 
 
 

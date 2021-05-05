@@ -67,7 +67,7 @@ class Train:
 
             while True:  # loop controlled with termination of state, run until done
 
-                if render is True:  # for visualization
+                if render is True and ep > 100:  # for visualization
                     self.env.render()
 
                 next_state, reward, terminate, info = self.env.step(action)  # commit to action
