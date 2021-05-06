@@ -43,8 +43,8 @@ class DQN:
         q_values = self.q_approx(states)
         next_q_values = self.q_approx(next_states, target=True)
 
-        #rate = 0.7
-        rate = 0.9
+        rate = 0.6
+        #rate = 0.9
         # Find y_i
         X = []
         Y = []
@@ -66,7 +66,9 @@ class DQN:
         # print(x.shape)
         y = np.array(Y)
         # print(y.shape)
-        self.network.fit(x, y, epoch=1, mini_batch_size=len(mini_batch), learning_rate=learning_rate)
+        _, losses = self.network.fit(x, y, epoch=1, mini_batch_size=len(mini_batch), learning_rate=learning_rate)
+
+        return losses[0]
 
 
 

@@ -102,7 +102,7 @@ class Train:
         return reward_per_episode, steps_per_episode
 
 
-    def train_dqn(self, episodes, time_steps, C, min_replay_count, batch_size, learning_rate, discount, epsilon, max_steps=None, decay=False, render=False):
+    def train_dqn(self, episodes, time_steps, C, min_replay_count, batch_size, learning_rate, discount, epsilon, duration=30, lr_low=0, max_steps=None, decay=False, render=False):
         """
         Training function, loops for episodes, implemented using Sutton's RL book
         :param episodes: trial amount
@@ -121,6 +121,11 @@ class Train:
 
         reward_per_episode = []
         steps_per_episode = []
+        loss_per_episode = []
+
+        lrinit = learning_rate
+
+
         target_update_count = 0
         for ep in range(episodes):
 
@@ -131,17 +136,20 @@ class Train:
             i = 1
             rewards_sum = 0
 
-            if decay is True and epsilon > 0.1:  # decay
-                epsilon -= (0.9)/1000000
-                #learning_rate /= 1.1
+            if decay is True and epsilon > 0.1 and learning_rate > lr_low:  # decay
+                epsilon -= (0.9)/duration
+                # print("epsilon", epsilon)
+                learning_rate -= (lrinit - lr_low)/duration
 
-            print(ep, "ep")
+            loss = 0
+            #print(ep, "ep")
 
 
             for t in range(time_steps):
+                #print(t)
                 target_update_count += 1
 
-                if render is True and ((ep > 480)):  # for visualization
+                if render is True and ep > 1150:  # for visualization
                     self.env.render()
 
                 # With probability epsilon select a random action a_t, otherwise select at = max_a Q(s_t, a; θ)
@@ -172,10 +180,10 @@ class Train:
 
 
 
-
+                #print("updating at", ep)
                 mini_batch = random.sample(self.model.replay_memory, batch_size)
 
-                self.model.update(mini_batch, learning_rate, discount)
+                loss += self.model.update(mini_batch, learning_rate, discount)
 
 
                 # Update target network weights
@@ -184,18 +192,19 @@ class Train:
 
 
 
-
+            loss_per_episode.append(loss/t)
 
             reward_per_episode.append(rewards_sum)
             steps_per_episode.append(i)
 
-            print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
+            if (ep % 1 == 0):
+                print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
 
         # Save model
-        with open('save_test_model.pkl', 'wb') as output:
-            pickle.dump(self.model, output, pickle.HIGHEST_PROTOCOL)
 
-        return reward_per_episode, steps_per_episode
+
+
+        return reward_per_episode, steps_per_episode, loss_per_episode
 
 
 
@@ -211,7 +220,9 @@ class Train:
             # print("state", state)
             # print("self.model.q_approx(state)")
             # print(self.model.q_approx(state))
-            return np.argmax(self.model.q_approx(state))
+            approx = self.model.q_approx(state)
+            index = np.argmax(approx)
+            return index
         else:
             return self.env.action_space.sample()
 
