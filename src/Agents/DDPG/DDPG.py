@@ -14,19 +14,18 @@ class DDPG(object):
 
     def __init__(self, state_dim, action_dim, actor_layers, critic_layers, state_layers, action_layers, env):
 
-        np.random.seed(11111)
-        env.seed(11111)
+        print(env.action_space.high[0])
         self.actor = Actor(actor_layers, state_dim, "adam", env.action_space.high[0])
         self.critic = Critic(critic_layers, state_layers, action_layers, state_dim, action_dim, "adam")
         self.env = env
-        self.buffer_size = 100000
+        self.buffer_size = 10000
         self.batch_size = 64
         self.replay_buffer = deque()
-        self.noise = lambda: 0 #OUActionNoise(mean=np.zeros(1), std_deviation=float(0.2) * np.ones(1))
+        self.epsilon = 0.999
 
 
 
-    def train(self, episodes, actor_learning_rate, critic_learning_rate, discount_rate, max_steps, render=False):
+    def train(self, episodes, actor_learning_rate, critic_learning_rate, discount_rate, tau, max_steps, render=False):
 
         reward_per_episode = []
         Q_loss = []
@@ -39,46 +38,67 @@ class DDPG(object):
             rewards_sum = 0
             Q_loss_sum = 0
             policy_loss_sum = 0
+            # self.epsilon *= 0.9995
+            # actor_learning_rate *= 0.99995
+            # critic_learning_rate *= 0.99995
 
             while True:  # loop controlled with termination of state, run until done
 
-                if render is True:  # for visualization
+                if render is True and ep > 10:  # for visualization
                     self.env.render()
 
-                action = self.actor.predict(state.T) + 1. / (1 + ep * i)
+                # if np.random.random() < self.epsilon:
+                #     action = np.clip(self.actor.predict(state.T) + np.random.normal(), -1, 1) * self.env.action_space.high[0]
+                # else:
+                #     action = self.actor.predict(state.T)
 
-                next_state, reward, terminate, info = self.env.step(action)  # commit to action
+                action = self.actor.predict(state.T) + 1. / (1. + i + ep)
+                next_state, reward, terminate, info = self.env.step(action[0])  # commit to action
 
-                self.add_replay((state.flatten().astype("float32"), action.flatten().astype("float32"),
-                                 np.asarray(reward).astype("float32"), next_state.flatten().astype("float32"), np.asarray(terminate)))
-
-
+                self.add_replay((state, action[0], reward, next_state, terminate))
 
                 if len(self.replay_buffer) > self.batch_size:
 
-                    replay_batch = self.get_replay_batch()
+                    states, actions, rewards, next_states, dones = self.get_replay_batch()
 
-                    next_action = self.actor.target_predict(replay_batch[-2])
-                    critic_loss = self.critic.fit(next_action, replay_batch, critic_learning_rate, discount_rate)
+                    next_actions = self.actor.target_predict(next_states)
+                    target_Q = self.critic.target_predict((next_states, next_actions))
+                    Y = np.empty_like(actions)
+
+                    for j in range(len(Y)):
+                        if not dones[j]:
+                            Y[j] = rewards[j] + discount_rate * target_Q[j]
+                        else:
+                            Y[j] = rewards[j]
+
+                    # print("Y:", Y.shape, Y.min(), Y.max())
 
 
-                    grad, actor_loss = self.critic.action_grad(replay_batch[0], self.actor.predict(replay_batch[0]), self.batch_size)
-                    self.actor.update(grad, replay_batch[0], actor_learning_rate)
+                    critic_loss = self.critic.fit(states, actions, Y, critic_learning_rate)
 
+                    action_prediction = self.actor.predict(states)
+                    grad, critic_prediction, actor_loss = self.critic.action_grad(states, action_prediction, self.batch_size)
+                    self.actor.update(grad, critic_prediction, actor_learning_rate)
 
-                    self.critic.target_update(0.001)
-                    self.actor.target_update(0.001)
+                    self.critic.target_update(tau)
+                    self.actor.target_update(tau)
 
                     Q_loss_sum += critic_loss
                     policy_loss_sum += actor_loss
 
 
+
+                # print(f"Step: {i}")
                 i += 1
                 rewards_sum += reward
+                state = next_state
+
                 if terminate or i > max_steps:
                     break
 
-                state = next_state
+
+
+
 
             Q_loss.append(Q_loss_sum/i)
             policy_loss.append(policy_loss_sum/i)
@@ -101,8 +121,15 @@ class DDPG(object):
 
     def get_replay_batch(self):
         batch = random.sample(self.replay_buffer, self.batch_size)
-        s, a, r, sn, d = zip(*batch)
-        out = np.asarray(s), np.asarray(a), np.asarray(r).reshape(-1, 1), np.asarray(sn), np.asarray(d).reshape(-1, 1)
+        # s, a, r, sn, d = zip(*batch)
+        # out = np.asarray(s), np.asarray(a), np.asarray(r).reshape(-1, 1), np.asarray(sn), np.asarray(d).reshape(-1, 1)
 
+        s = np.asarray([e[0] for e in batch])
+        a = np.asarray([e[1] for e in batch])
+        r = np.asarray([e[2] for e in batch])
+        sn = np.asarray([e[3] for e in batch])
+        d = np.asarray([e[4] for e in batch])
+
+        out = s, a, r, sn, d
         return out
 

@@ -2,6 +2,8 @@ import copy
 import random
 from collections import deque
 import numpy as np
+import pickle
+
 
 
 class ABC:
@@ -54,6 +56,9 @@ print(b)
 sample = random.sample(b, 3)
 states, actions, rewards = zip(*sample)
 print(np.asarray(states).shape)
+
+
+
 
 
 

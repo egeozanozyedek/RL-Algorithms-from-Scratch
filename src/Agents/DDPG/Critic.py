@@ -22,7 +22,7 @@ class Critic(Network):
         self.state_dim = state_next_size
         self.action_dim = action_next_size
 
-        super().__init__(layers, action_next_size , "MSE", optimizer=optimizer)
+        super().__init__(layers, state_next_size , "MSE", optimizer=optimizer)
 
 
         self.target_layers = copy.deepcopy(self.layers)
@@ -30,17 +30,24 @@ class Critic(Network):
         self.target_action_layers = copy.deepcopy(self.action_layers)
 
 
+    # def fit(self, next_action, replay_batch, learning_rate, discount_rate, tau=0.01):
+    #
+    #     state, action, reward, next_state, done = replay_batch
+    #     reward = np.reshape(reward, (-1, 1))
+    #     target_Q = self.target_predict((next_state, next_action))
+    #     Y = np.empty_like(action)
+    #
+    #     for i in range(len(Y)):
+    #         if not done[i]:
+    #             Y[i] = reward[i] + discount_rate * target_Q[i]
+    #         else:
+    #             Y[i] = reward[i]
+    #
+    #     print("Y:", Y.shape, Y.min(), Y.max())
 
 
-
-    def fit(self, next_action, replay_batch, learning_rate, discount_rate, tau=0.01):
-
-        state, action, reward, next_state, done = replay_batch
-
-        Y = np.empty_like(action)
-
-        Y[done is False] = reward.reshape(-1, 1) + discount_rate * self.target_predict((next_state, next_action))[done is False]
-        Y[done is True] = reward.reshape(-1, 1)
+    def fit(self, state, action, Y, learning_rate, a=None):
+        # print(state.shape, action.shape, Y.shape)
         _, loss = super()._fit_instance((state, action), Y, learning_rate)
 
         return loss
@@ -76,7 +83,7 @@ class Critic(Network):
 
         for action_layer in self.target_action_layers:
             na = action_layer.predict(na)
-
+        #
         # concat = np.hstack((ns, na))
         concat = ns + na
 
@@ -109,7 +116,7 @@ class Critic(Network):
             action_residual = action_layer.backward_pass(action_residual)
 
 
-        return action_residual, loss
+        return -action_residual, out, loss
 
 
 
@@ -147,7 +154,7 @@ class Critic(Network):
         for layer in reversed(self.layers):
             next_residual = layer.backward_pass(next_residual)
 
-
+        #
         # state_residual, action_residual = next_residual[:, :self.state_dim], next_residual[:, self.state_dim:]
         state_residual = next_residual
         action_residual = next_residual
