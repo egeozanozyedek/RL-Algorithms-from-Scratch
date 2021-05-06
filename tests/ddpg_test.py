@@ -18,7 +18,7 @@ print(state_dim, action_dim)
 
 
 actor_layers = [FullyConnected(300, "relu"), FullyConnected(600, "relu"), FullyConnected(action_dim, "tanh")]
-critic_layers = [FullyConnected(1, "relu")]
+critic_layers = [FullyConnected(600, "relu"), FullyConnected(1, "linear")]
 state_layers = [FullyConnected(300, "relu"), FullyConnected(600, "linear")]
 action_layers = [FullyConnected(600, "linear")]
 

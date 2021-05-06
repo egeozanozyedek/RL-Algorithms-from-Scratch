@@ -24,6 +24,8 @@ class FullyConnected(object):
         self.nodes = nodes
         self.activation = activation_map[activation]
         self.optimizer = None
+        self.tanh = activation
+        self.iteration = 1
 
 
 
@@ -35,7 +37,10 @@ class FullyConnected(object):
         """
 
         self.optimizer = optimizer
-        init = np.sqrt(6/(input_size + self.nodes))
+        if self.tanh == "tanh":
+            init = 3e-3
+        else:
+            init = np.sqrt(6/(input_size + self.nodes))
         self.weight = np.random.uniform(-init, init, size=(input_size, self.nodes)).astype("float32")
         self.bias = np.zeros((1, self.nodes)).astype("float32")
 
@@ -127,18 +132,19 @@ class FullyConnected(object):
             self.opv["sW"] = (1 - beta2) * np.square(self.opv["dW"]) + beta2 * self.opv["sW"]
             self.opv["sb"] = (1 - beta2) * np.square(self.opv["db"]) + beta2 * self.opv["sb"]
 
-
-            # self.opv["mW"] /= 1 - beta1 ** self.iteration
-            # self.opv["mb"] /= 1 - beta1 ** self.iteration
+            # print((1 - beta1 ** self.iteration), (1 - beta2 ** self.iteration))
             #
-            # self.opv["sW"] /= 1 - beta2 ** self.iteration
-            # self.opv["sb"] /= 1 - beta2 ** self.iteration
+            # self.opv["mW"] = self.opv["mW"] / (1 - beta1 ** self.iteration)
+            # self.opv["mb"] = self.opv["mb"] / (1 - beta1 ** self.iteration)
+            #
+            # self.opv["sW"] = self.opv["sW"] / (1 - beta2 ** self.iteration)
+            # self.opv["sb"] = self.opv["sb"] / (1 - beta2 ** self.iteration)
 
 
             self.weight -= learning_rate * self.opv["mW"]/(np.sqrt(self.opv["sW"]) + epsilon)
             self.bias -= learning_rate * self.opv["mb"]/(np.sqrt(self.opv["sb"]) + epsilon)
 
-
+            self.iteration += 1
 
     def predict(self, X):
         """

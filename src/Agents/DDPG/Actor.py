@@ -8,14 +8,14 @@ class Actor(Network):
         # print(input_size)
         super().__init__(layers, input_size, "MSE", optimizer=optimizer)
         self.target_layers = copy.deepcopy(self.layers)
-        self.action_bound = action_bound
+        self.action_bound =  action_bound
 
 
 
     def update(self, grad, state, learning_rate):
 
         super()._call_forward(state)
-        super()._call_backward(self.action_bound * grad) # todo: maybe minus grad
+        super()._call_backward(self.action_bound * -grad) # todo: maybe minus grad
         self._call_update(learning_rate)
 
 
