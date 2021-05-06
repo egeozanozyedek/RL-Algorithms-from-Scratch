@@ -5,6 +5,7 @@ from src.Agents.SARSA.Sarsa import Sarsa
 from src.Agents.SARSA.DeepSARSA import DeepSARSA
 from src.Agents.DQN.DQN import DQN
 
+import pickle
 
 
 class Train:
@@ -96,6 +97,8 @@ class Train:
 
             print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
 
+
+
         return reward_per_episode, steps_per_episode
 
 
@@ -118,7 +121,7 @@ class Train:
 
         reward_per_episode = []
         steps_per_episode = []
-
+        target_update_count = 0
         for ep in range(episodes):
 
             # get initial state and action (via policy)
@@ -128,16 +131,17 @@ class Train:
             i = 1
             rewards_sum = 0
 
-            if decay is True and ep == 40:  # decay
-                epsilon /= 2.1
-                learning_rate /= 1.1
+            if decay is True and epsilon > 0.1:  # decay
+                epsilon -= (0.9)/1000000
+                #learning_rate /= 1.1
 
             print(ep, "ep")
 
 
             for t in range(time_steps):
+                target_update_count += 1
 
-                if render is True and ep > 150:  # for visualization
+                if render is True and ((ep > 480)):  # for visualization
                     self.env.render()
 
                 # With probability epsilon select a random action a_t, otherwise select at = max_a Q(s_t, a; θ)
@@ -175,7 +179,7 @@ class Train:
 
 
                 # Update target network weights
-                if t % C == 0:
+                if target_update_count % C == 0:
                     self.model.update_target()
 
 
@@ -186,6 +190,10 @@ class Train:
             steps_per_episode.append(i)
 
             print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
+
+        # Save model
+        with open('save_test_model.pkl', 'wb') as output:
+            pickle.dump(self.model, output, pickle.HIGHEST_PROTOCOL)
 
         return reward_per_episode, steps_per_episode
 

@@ -1,5 +1,6 @@
 from src.FeatureConstructors.RadialBasis import RBF
 from src.NeuralNetwork.Layers import FullyConnected
+from src.NeuralNetwork.Layers import Dropout
 from src.NeuralNetwork.Network import Network
 from src.Train import Train
 from matplotlib import pyplot as plt
@@ -21,8 +22,8 @@ state_high = env.observation_space.high
 
 
 # Network
-layers = [FullyConnected(64, "relu"), FullyConnected(128, "relu"), FullyConnected(action_dim, "linear")]
-net = Network(layers, state_dim, "MSE", optimizer="sgd") # Huber loss, He init
+layers = [FullyConnected(128, "relu"), FullyConnected(128, "relu"), FullyConnected(128, "relu"), FullyConnected(action_dim, "linear")]
+net = Network(layers, state_dim, "MSE", optimizer="adam") # Huber loss, He init
 
 # Target Network
 target_net = deepcopy(net)
@@ -32,7 +33,7 @@ target_net = deepcopy(net)
 # basis_function = RBF(rbf_order, state_dim, state_low, state_high)
 # sarsa_config = {"state_dim": state_dim, "action_dim": action_dim, "basis_function": basis_function}
 
-dqn_config = {"state_dim":state_dim, "action_dim":action_dim, "layers":layers, "N": 50000}
+dqn_config = {"state_dim":state_dim, "action_dim":action_dim, "layers":layers, "N": 100000}
 
 
 trainer = Train(env, "DQN", dqn_config)
@@ -41,9 +42,9 @@ re = []
 se = []
 
 for i in range(1):
-    reward_per_episode, steps_per_episode = trainer.train_dqn(episodes=200, time_steps=10000, C=4, min_replay_count=int(1024),
-                                                              batch_size=int(128), learning_rate=0.00125, discount=0.99, epsilon=0.01,
-                                                              max_steps=None, decay=True, render=False)
+    reward_per_episode, steps_per_episode = trainer.train_dqn(episodes=500, time_steps=10000, C=1000, min_replay_count=int(1024),
+                                                              batch_size=int(32), learning_rate=0.0002, discount=0.95, epsilon=1,
+                                                              max_steps=None, decay=True, render=True)
     re.append(reward_per_episode)
     se.append(steps_per_episode)
 
@@ -56,6 +57,10 @@ se = np.mean(se, axis=1)
 
 print(steps_per_episode)
 print(reward_per_episode)
+
+np.save("steps", np.array(steps_per_episode))
+np.save("rewards", np.array(reward_per_episode))
+
 
 plt.figure(figsize=(12, 8), dpi=160)
 plt.xlabel("Episode")
@@ -75,15 +80,15 @@ plt.savefig("dqn.png")
 # trainer.model.save_weights()
 
 # Calculate the window average, to understand when it completes the task
-windowed = window_avg(np.array(reward_per_episode), window_size=50, threshold=-1)
-print(windowed[1])
-
-plt.figure(figsize=(12, 8), dpi=160)
-plt.xlabel("Episode")
-plt.ylabel("Time Steps Taken")
-plt.plot(windowed[0], "C4")
-plt.show()
-plt.savefig("dqn_windowed.png")
+# windowed = window_avg(np.array(reward_per_episode), window_size=50, threshold=-1)
+# print(windowed[1])
+#
+# plt.figure(figsize=(12, 8), dpi=160)
+# plt.xlabel("Episode")
+# plt.ylabel("Time Steps Taken")
+# plt.plot(windowed[0], "C4")
+# plt.show()
+# plt.savefig("dqn_windowed.png")
 
 
 
