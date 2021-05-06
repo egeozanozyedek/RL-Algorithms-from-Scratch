@@ -60,6 +60,8 @@ def cross_entropy(pred, actual):
 
 def mse(pred, actual):
 
+    # print("Pred:", pred.shape, pred.min(), pred.max(), "Actual:", actual.shape, actual.min(), actual.max())
+
     if isinstance(actual, float):
         size = 1
     else:

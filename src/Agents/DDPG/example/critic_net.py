@@ -89,30 +89,29 @@ class CriticNet(object):
         
         
     
-    # Initialization based on "Continuous control with deep reinformcement 
-    # learning"
-#    self.params['W1_tgt'] = self.params['W1']
-#    self.params['b1_tgt'] = self.params['b1']
-#    self.params['W2_S_tgt'] = self.params['W2_S']
-#    self.params['b2_S_tgt'] = self.params['b2_S']
-#    self.params['W2_A_tgt'] = self.params['W2_A']
-#    self.params['b2_A_tgt'] = self.params['b2_A']
-#    self.params['W3_tgt'] = self.params['W3']
-#    self.params['b3_tgt'] = self.params['b3']
-#    self.params['W4_tgt'] = self.params['W4']
-#    self.params['b4_tgt'] = self.params['b4']
+    # Initialization based on "Continuous control with deep reinformcement
+    self.params['W1_tgt'] = self.params['W1']
+    self.params['b1_tgt'] = self.params['b1']
+    self.params['W2_S_tgt'] = self.params['W2_S']
+    self.params['b2_S_tgt'] = self.params['b2_S']
+    self.params['W2_A_tgt'] = self.params['W2_A']
+    self.params['b2_A_tgt'] = self.params['b2_A']
+    self.params['W3_tgt'] = self.params['W3']
+    self.params['b3_tgt'] = self.params['b3']
+    self.params['W4_tgt'] = self.params['W4']
+    self.params['b4_tgt'] = self.params['b4']
 
-    self.params['W1_tgt'] = self._uniform_init(input_size_S, hidden_size1)
-    self.params['b1_tgt'] = np.zeros(hidden_size1)
-    self.params['W2_S_tgt'] = self._uniform_init(hidden_size1, hidden_size2)
-    self.params['b2_S_tgt'] = np.zeros(hidden_size2)
-    self.params['W2_A_tgt'] = self._uniform_init(input_size_A, hidden_size2)
-    self.params['b2_A_tgt'] = np.zeros(hidden_size2)
-    self.params['W3_tgt'] = self._uniform_init(hidden_size2, hidden_size3)
-    self.params['b3_tgt'] = np.zeros(hidden_size3)
-    self.params['W4_tgt'] = np.random.uniform(-3e-3, 3e-3, (hidden_size3, output_size))
-    self.params['b4_tgt'] = np.zeros(output_size)
-    
+    # self.params['W1_tgt'] = self._uniform_init(input_size_S, hidden_size1)
+    # self.params['b1_tgt'] = np.zeros(hidden_size1)
+    # self.params['W2_S_tgt'] = self._uniform_init(hidden_size1, hidden_size2)
+    # self.params['b2_S_tgt'] = np.zeros(hidden_size2)
+    # self.params['W2_A_tgt'] = self._uniform_init(input_size_A, hidden_size2)
+    # self.params['b2_A_tgt'] = np.zeros(hidden_size2)
+    # self.params['W3_tgt'] = self._uniform_init(hidden_size2, hidden_size3)
+    # self.params['b3_tgt'] = np.zeros(hidden_size3)
+    # self.params['W4_tgt'] = np.random.uniform(-3e-3, 3e-3, (hidden_size3, output_size))
+    # self.params['b4_tgt'] = np.zeros(output_size)
+    #
     # Initialize the dictionary for optimization configuration for diffrent 
     # layers
     

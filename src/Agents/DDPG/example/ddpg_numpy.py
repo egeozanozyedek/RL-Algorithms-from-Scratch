@@ -89,9 +89,10 @@ if __name__ == '__main__':
             # add noise in the form of 1./(1.+i+j), decaying over episodes and
             # steps, otherwise a_t will be the same, since s is fixed per episode.
             a_t = actor.predict(np.reshape(s_t,(1,3)), ACTION_BOUND, target=False)+1./(1.+i+j)
-            
+            print(a_t.shape)
             # Execute action a_t and observe reward r_t and new state s_{t+1}
             s_t_1, r_t, done, info = env.step(a_t[0])
+            print(s_t.shape, s_t_1.shape)
             
             # Store transition in replay buffer
             buff.add(s_t, a_t[0], r_t, s_t_1, done)
@@ -115,6 +116,8 @@ if __name__ == '__main__':
                         y[k] = rewards[k]
                     else:
                         y[k] = rewards[k] + GAMMA*Q_tgt[k]
+
+                print("Y:", y.shape, y.min(), y.max())
                 # Update critic by minimizing the loss
                 loss += critic.train(states_t, actions, y)
                 # Update actor using sampled policy gradient

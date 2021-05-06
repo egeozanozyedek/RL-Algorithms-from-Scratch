@@ -40,8 +40,8 @@ class FullyConnected(object):
             init = 3e-3
         else:
             init = np.sqrt(6/(input_size + self.nodes))
-        self.weight = np.random.uniform(-init, init, size=(input_size, self.nodes))
-        self.bias = np.zeros((1, self.nodes))
+        self.weight = np.random.uniform(-init, init, size=(input_size, self.nodes)).astype("float32")
+        self.bias = np.zeros((1, self.nodes)).astype("float32")
 
 
         return self.nodes
@@ -49,6 +49,73 @@ class FullyConnected(object):
 
 
     def forward_pass(self, X):
+
+        def batchnorm_forward(x, gamma, beta, bn_param):
+            """
+            Forward pass for batch normalization.
+            During training the sample mean and (uncorrected) sample variance are
+            computed from minibatch statistics and used to normalize the incoming data.
+            During training we also keep an exponentially decaying running mean of the
+            mean and variance of each feature, and these averages are used to normalize
+            data at test-time.
+            At each timestep we update the running averages for mean and variance using
+            an exponential decay based on the momentum parameter:
+            running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+            running_var = momentum * running_var + (1 - momentum) * sample_var
+
+            Input:
+            - x: Data of shape (N, D)
+            - gamma: Scale parameter of shape (D,)
+            - beta: Shift paremeter of shape (D,)
+            - bn_param: Dictionary with the following keys:
+              - mode: 'train' or 'test'; required
+              - eps: Constant for numeric stability
+              - momentum: Constant for running mean / variance.
+              - running_mean: Array of shape (D,) giving running mean of features
+              - running_var Array of shape (D,) giving running variance of features
+            Returns a tuple of:
+            - out: of shape (N, D)
+            - cache: A tuple of values needed in the backward pass
+            """
+            mode = bn_param['mode']
+            eps = bn_param.get('eps', 1e-5)
+            momentum = bn_param.get('momentum', 0.9)
+
+            N, D = x.shape
+            running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
+            running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
+
+            if mode == 'train':
+                sample_mean = x.mean(axis=0)
+                sample_var = x.var(axis=0)
+
+                running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+                running_var = momentum * running_var + (1 - momentum) * sample_var
+
+                std = np.sqrt(sample_var + eps)
+                x_centered = x - sample_mean
+                x_norm = x_centered / std
+                out = gamma * x_norm + beta
+
+                cache = (x_norm, x_centered, std, gamma)
+
+            elif mode == 'test':
+                x_norm = (x - running_mean) / np.sqrt(running_var + eps)
+                out = out = gamma * x_norm + beta
+
+            else:
+                raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
+
+            # Store the updated running means back into bn_param
+            bn_param['running_mean'] = running_mean
+            bn_param['running_var'] = running_var
+
+            return out, cache
+
+
+
+
+
         """
         Forward pass of layer
         :param X:
@@ -65,6 +132,10 @@ class FullyConnected(object):
 
 
         return phi
+
+
+
+
 
 
     def backward_pass(self, residual):
@@ -86,6 +157,8 @@ class FullyConnected(object):
 
 
 
+
+
     def update(self, learning_rate, config):
         """
 
@@ -101,8 +174,6 @@ class FullyConnected(object):
         :param learning_rate: learning rate for update
         :param momentum_rate: momentum_rate for updatte
         """
-
-        # print("Weight:", self.weight.shape, self.weight.min(), self.weight.max(), "Bias:", self.bias.shape, self.bias.min(), self.bias.max())
 
 
         if self.optimizer == "sgd":
@@ -146,6 +217,10 @@ class FullyConnected(object):
             self.bias -= learning_rate * self.opv["mb"]/(np.sqrt(self.opv["sb"]) + epsilon)
 
             self.iteration += 1
+
+
+
+
 
 
 

@@ -14,13 +14,12 @@ class Actor(Network):
 
     def update(self, grad, state, learning_rate):
 
-        super()._call_forward(state)
         super()._call_backward(self.action_bound * grad) # todo: maybe minus grad
         self._call_update(learning_rate)
 
 
     def predict(self, X):
-        return super().predict(X) * self.action_bound
+        return super()._call_forward(X) * self.action_bound
 
 
 
