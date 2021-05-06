@@ -22,7 +22,7 @@ class Critic(Network):
         self.state_dim = state_next_size
         self.action_dim = action_next_size
 
-        super().__init__(layers, state_next_size , "MSE", optimizer=optimizer)
+        super().__init__(layers, action_next_size + state_next_size , "MSE", optimizer=optimizer)
 
 
         self.target_layers = copy.deepcopy(self.layers)
@@ -64,8 +64,8 @@ class Critic(Network):
         for action_layer in self.action_layers:
             na = action_layer.predict(na)
 
-        # concat = np.hstack((ns, na))
-        concat = ns + na
+        concat = np.hstack((ns, na))
+        # concat = ns + na
 
         next_X = concat
 
@@ -84,8 +84,8 @@ class Critic(Network):
         for action_layer in self.target_action_layers:
             na = action_layer.predict(na)
         #
-        # concat = np.hstack((ns, na))
-        concat = ns + na
+        concat = np.hstack((ns, na))
+        # concat = ns + na
 
         next_X = concat
 
@@ -109,8 +109,8 @@ class Critic(Network):
         for layer in reversed(self.layers):
             next_residual = layer.backward_pass(next_residual)
 
-        # action_residual = next_residual[:, self.state_dim:]
-        action_residual = next_residual
+        action_residual = next_residual[:, self.state_dim:]
+        # action_residual = next_residual
 
         for action_layer in reversed(self.action_layers):
             action_residual = action_layer.backward_pass(action_residual)
@@ -131,8 +131,8 @@ class Critic(Network):
             na = action_layer.forward_pass(na)
 
 
-        # concat = np.hstack((ns, na))
-        concat = ns + na
+        concat = np.hstack((ns, na))
+        # concat = ns + na
 
 
         next_X = concat
@@ -154,10 +154,10 @@ class Critic(Network):
         for layer in reversed(self.layers):
             next_residual = layer.backward_pass(next_residual)
 
-        #
-        # state_residual, action_residual = next_residual[:, :self.state_dim], next_residual[:, self.state_dim:]
-        state_residual = next_residual
-        action_residual = next_residual
+
+        state_residual, action_residual = next_residual[:, :self.state_dim], next_residual[:, self.state_dim:]
+        # state_residual = next_residual
+        # action_residual = next_residual
 
 
         for state_layer in reversed(self.state_layers):
