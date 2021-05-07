@@ -102,7 +102,7 @@ class Train:
         return reward_per_episode, steps_per_episode
 
 
-    def train_dqn(self, episodes, time_steps, C, min_replay_count, batch_size, learning_rate, discount, epsilon, duration=30, lr_low=0, max_steps=None, decay=False, render=False):
+    def train_dqn(self, episodes, time_steps, C, min_replay_count, batch_size, learning_rate, discount, epsilon, epsilon_decay=0.95, lr_decay = 0.99, duration=30, lr_low=0, max_steps=None, decay=False, render=False):
         """
         Training function, loops for episodes, implemented using Sutton's RL book
         :param episodes: trial amount
@@ -136,10 +136,13 @@ class Train:
             i = 1
             rewards_sum = 0
 
-            if decay is True and epsilon > 0.1 and learning_rate > lr_low:  # decay
-                epsilon -= (0.9)/duration
+            if decay is True and epsilon > 0.01 and learning_rate > lr_low:  # decay
+                #epsilon *= epsilon_decay
                 # print("epsilon", epsilon)
-                learning_rate -= (lrinit - lr_low)/duration
+                #learning_rate *= lr_decay # landerda yok
+
+                epsilon -= 0.99 / 300
+                learning_rate -= 0.00015 / 300
 
             loss = 0
             #print(ep, "ep")
@@ -149,7 +152,7 @@ class Train:
                 #print(t)
                 target_update_count += 1
 
-                if render is True and ep > 1150:  # for visualization
+                if render is True and ep > 1450:  # for visualization
                     self.env.render()
 
                 # With probability epsilon select a random action a_t, otherwise select at = max_a Q(s_t, a; θ)
@@ -199,6 +202,11 @@ class Train:
 
             if (ep % 1 == 0):
                 print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
+
+            if (ep % 10 == 0 and ep < 300):
+                print("epsilon", epsilon)
+
+
 
         # Save model
 

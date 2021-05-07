@@ -13,7 +13,7 @@ from utils.calc import window_avg
 import atari_py
 print(atari_py.list_games())
 
-env = gym.make("SpaceInvaders-ram-v0")
+env = gym.make("LunarLander-v2")
 #env = gym.make("CartPole-v0").env
 
 
@@ -24,7 +24,7 @@ state_high = env.observation_space.high
 
 
 # Network
-layers = [FullyConnected(128, "relu"), FullyConnected(128, "relu"), FullyConnected(128, "relu"), FullyConnected(action_dim, "linear")]
+layers = [FullyConnected(150, "relu"), FullyConnected(120, "relu"), FullyConnected(action_dim, "linear")]
 net = Network(layers, state_dim, "MSE", optimizer="adam") # Huber loss, He init
 
 # Target Network
@@ -35,7 +35,7 @@ target_net = deepcopy(net)
 # basis_function = RBF(rbf_order, state_dim, state_low, state_high)
 # sarsa_config = {"state_dim": state_dim, "action_dim": action_dim, "basis_function": basis_function}
 
-dqn_config = {"state_dim":state_dim, "action_dim":action_dim, "layers":layers, "N": 100000}
+dqn_config = {"state_dim":state_dim, "action_dim":action_dim, "layers":layers, "N": 1000000}
 
 
 trainer = Train(env, "DQN", dqn_config)
@@ -45,23 +45,23 @@ se = []
 le = []
 
 for iter in range(1):
-    reward_per_episode, steps_per_episode, loss_per_episode = trainer.train_dqn(episodes=1500, time_steps=10000, C=4, min_replay_count=int(32),
-                                                              batch_size=int(32), learning_rate=0.0002, discount=0.995, epsilon=1, duration = 100000, lr_low=0.0001,
+    reward_per_episode, steps_per_episode, loss_per_episode = trainer.train_dqn(episodes=500, time_steps=1000, C=100, min_replay_count=int(64),
+                                                              batch_size=int(64), epsilon_decay=0.95, learning_rate=0.001, discount=0.99, epsilon=1, duration = 100000, lr_low=0.0001,
                                                               max_steps=None, decay=True, render=True)
     re.append(reward_per_episode)
     se.append(steps_per_episode)
     le.append(loss_per_episode)
 
     if iter == 0:
-        with open('dqn_atari_save_1500.pkl', 'wb') as output:
+        with open('dqn_lander.pkl', 'wb') as output:
             trainer.model.replay_memory = None
             pickle.dump(trainer.model, output, pickle.HIGHEST_PROTOCOL)
 
 
 #
-np.save( "dqn_atari_rewards_1500", np.array(re))
-np.save("dqn_atari_steps_1500", np.array(se))
-np.save("dqn_atari_loss_1500", np.array(le))
+np.save( "dqn_lander_reward", np.array(re))
+np.save("dqn_lander_steps", np.array(se))
+np.save("dqn_lander_loss", np.array(le))
 
 re = np.asarray(re)
 se = np.asarray(se)
@@ -77,21 +77,21 @@ plt.xlabel("Episode")
 plt.ylabel("Time Steps Taken")
 plt.plot(se, "C3")
 plt.show()
-plt.savefig("atari_dqnstep_1500.png")
+#plt.savefig("sea_dqnstep_dropout.png")
 
 plt.figure(figsize=(12, 8), dpi=160)
 plt.xlabel("Episode")
 plt.ylabel("Reward")
 plt.plot(re, "C4")
 plt.show()
-plt.savefig("atari_dqn_1500.png")
+#plt.savefig("sea_dqn_dropout.png")
 
 plt.figure(figsize=(12, 8), dpi=160)
 plt.xlabel("Episode")
 plt.ylabel("Loss")
 plt.plot(le, "C5")
 plt.show()
-plt.savefig("atari_loss_1500.png")
+#plt.savefig("sea_loss_dropout.png")
 
 # trainer.model.save_weights()
 

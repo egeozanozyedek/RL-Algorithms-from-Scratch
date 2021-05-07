@@ -43,7 +43,7 @@ class DQN:
         q_values = self.q_approx(states)
         next_q_values = self.q_approx(next_states, target=True)
 
-        rate = 0.6
+        rate = 0.9
         #rate = 0.9
         # Find y_i
         X = []
