@@ -1,15 +1,11 @@
 import pickle
-
-from src.FeatureConstructors.RadialBasis import RBF
 from src.NeuralNetwork.Layers import FullyConnected
-from src.NeuralNetwork.Layers import Dropout
 from src.NeuralNetwork.Network import Network
 from src.Train import Train
 from matplotlib import pyplot as plt
 import gym
 import numpy as np
 from copy import deepcopy
-from utils.calc import window_avg
 import atari_py
 print(atari_py.list_games())
 

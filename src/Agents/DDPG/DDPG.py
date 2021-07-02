@@ -19,18 +19,16 @@ class DDPG(object):
         self.critic = Critic(critic_layers, state_layers, action_layers, state_dim, action_dim, "adam")
         self.env = env
         self.buffer_size = 1000000
-        self.batch_size = 128
+        self.batch_size = 100
         self.replay_buffer = deque()
         self.epsilon = 1
         self.action_dim = action_dim
 
 
 
-    def train(self, episodes, actor_learning_rate, critic_learning_rate, discount_rate, tau, max_steps, render=False):
+    def train(self, episodes, actor_learning_rate, critic_learning_rate, discount_rate, tau, max_steps, info_tuple, render=False):
 
-        reward_per_episode = []
-        Q_loss = []
-        policy_loss = []
+        reward_per_episode, Q_loss, policy_loss = info_tuple
 
         for ep in range(episodes):
             # get initial state and action (via policy)
@@ -39,7 +37,8 @@ class DDPG(object):
             rewards_sum = 0
             Q_loss_sum = 0
             policy_loss_sum = 0
-            self.epsilon *= 0.993
+            if self.epsilon > 0.01:
+                self.epsilon *= 0.995
             actor_learning_rate *= 0.99995
             critic_learning_rate *= 0.99995
 
@@ -65,6 +64,9 @@ class DDPG(object):
                     next_actions = self.actor.target_predict(next_states)
                     target_Q = self.critic.target_predict((next_states, next_actions))
                     Y = np.empty((self.batch_size, 1))
+
+                    # Y = rewards + discount_rate * target_Q
+                    # Y[dones] = rewards[dones]
 
                     for j in range(len(Y)):
                         if not dones[j]:
@@ -105,7 +107,7 @@ class DDPG(object):
             print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
 
 
-        return reward_per_episode, Q_loss, policy_loss
+        # return reward_per_episode, Q_loss, policy_loss
 
 
 
@@ -132,3 +134,37 @@ class DDPG(object):
         out = s, a, r, sn, d
         return out
 
+
+
+    def play(self, episodes, max_steps, render=False):
+
+        reward_per_episode = []
+
+        for ep in range(episodes):
+            # get initial state and action (via policy)
+            state = self.env.reset()
+            i = 1
+            rewards_sum = 0
+
+
+            while True:  # loop controlled with termination of state, run until done
+
+                if render is True:  # for visualization
+                    self.env.render()
+
+                action = self.actor.predict(state.T)
+                next_state, reward, terminate, info = self.env.step(action.flatten())  # commit to action
+                state = next_state
+                # print(f"Step: {i}")
+                i += 1
+                rewards_sum += reward
+
+
+                if terminate or i > max_steps:
+                    break
+
+
+            reward_per_episode.append(rewards_sum)
+            print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
+
+        return reward_per_episode

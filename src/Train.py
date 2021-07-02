@@ -34,6 +34,37 @@ class Train:
 
         self.model = models[model_name](**model_config)
 
+    def play_sarsa(self, episodes, max_steps=None, render=False):
+
+        for ep in range(episodes):
+
+            # get initial state and action (via policy)
+            state = self.env.reset()
+            i = 1
+            rewards_sum = 0
+
+            while True:  # loop controlled with termination of state, run until done
+
+                if render is True:  # for visualization
+                    self.env.render()
+
+
+                action = self.greedy_policy(state, 0)
+                next_state, reward, terminate, info = self.env.step(action)  # commit to action
+                state = next_state
+
+                # to find average reward for the episode, hold a sum of all rewards and the steps taken
+                i += 1
+                rewards_sum += reward
+
+                if terminate is True or i > max_steps:  # in termination, update using only current state-action, and break out of this episode
+                    break
+
+                # update current state-action
+
+
+
+            print(f"Episode ended: {ep}\nReward total: {rewards_sum}\nSteps: {i}\n")
 
 
     def train(self, episodes, learning_rate, discount, epsilon, max_steps=None, decay=False, render=False):
@@ -61,14 +92,14 @@ class Train:
             i = 1
             rewards_sum = 0
 
-            if decay is True and ep % (episodes * 0.2) == 0:  # decay
-                epsilon /= 2.1
-                learning_rate /= 1.1
+            if decay is True and epsilon > 0.1:  # decay
+                epsilon *= 0.995
+                # learning_rate *= 0.99995
 
 
             while True:  # loop controlled with termination of state, run until done
 
-                if render is True and ep > 100:  # for visualization
+                if render is True:  # for visualization
                     self.env.render()
 
                 next_state, reward, terminate, info = self.env.step(action)  # commit to action
