@@ -1,6 +1,6 @@
 # RL-Algorithms-from-Scratch
 
-##Contributors
+## Contributors
 * Beste Aydemir (@besteaydemir on GitHub)
 * Ege Ozan Özyedek (@egeozanozyedek on GitHub)
 
